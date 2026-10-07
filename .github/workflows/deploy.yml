@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    name: 🧪 Build & Test
+    name: 🧪 Build & Test Verification
     runs-on: ubuntu-latest
 
     steps:
@@ -24,43 +24,8 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Type Check & Build
+      - name: Type Check & Build Bundle
         run: npm run build
 
       - name: Run Unit Tests
         run: npm run test:unit
-
-  deploy-to-netlify:
-    name: 🚀 Deploy to Netlify
-    needs: build-and-test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    env:
-      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install & Build Production Bundle
-        run: |
-          npm ci
-          npm run build
-
-      - name: Deploy to Netlify
-        if: ${{ env.NETLIFY_AUTH_TOKEN != '' && env.NETLIFY_SITE_ID != '' }}
-        uses: nwtgck/actions-netlify@v3.0
-        with:
-          publish-dir: './dist'
-          production-deploy: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions"
-          enable-pull-request-comment: false
-          enable-commit-comment: true
