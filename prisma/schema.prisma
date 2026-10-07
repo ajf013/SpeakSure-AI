@@ -1,0 +1,131 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum EnglishLevel {
+  BEGINNER
+  ELEMENTARY
+  INTERMEDIATE
+  UPPER_INTERMEDIATE
+  ADVANCED
+}
+
+enum InterviewType {
+  HR_INTERVIEW
+  TECHNICAL_INTERVIEW
+  CAMPUS_PLACEMENT
+  INTERNSHIP
+  BEHAVIORAL
+  GROUP_DISCUSSION
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  passwordHash       String?
+  name               String
+  college            String
+  course             String
+  graduationYear     Int
+  targetRole         String
+  englishLevel       EnglishLevel        @default(INTERMEDIATE)
+  streakCount        Int                 @default(0)
+  xpPoints           Int                 @default(0)
+  currentLevel       Int                 @default(1)
+  dailyGoalMinutes   Int                 @default(10)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  attempts           AssessmentAttempt[]
+  interviewSessions  InterviewSession[]
+  grammarMistakes    GrammarMistake[]
+  aiConversations    AIConversation[]
+
+  @@map("users")
+}
+
+model DailyAssessment {
+  id                       String              @id @default(uuid())
+  dayNumber                Int                 @unique
+  title                    String
+  promptText               String
+  category                 String
+  difficulty               String
+  suggestedDurationSeconds Int
+  createdAt                DateTime            @default(now())
+
+  attempts                 AssessmentAttempt[]
+
+  @@map("daily_assessments")
+}
+
+model AssessmentAttempt {
+  id              String          @id @default(uuid())
+  userId          String
+  assessmentId    String
+  mode            String          // voice, video, text
+  transcript      String          @db.Text
+  durationSeconds Int
+  overallScore    Int
+  fluencyScore    Int
+  grammarScore    Int
+  vocabScore      Int
+  pronScore       Int
+  confidenceScore Int
+  wordsPerMinute  Int
+  fillerWords     Int
+  longPauses      Int
+  createdAt       DateTime        @default(now())
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessment      DailyAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@map("assessment_attempts")
+}
+
+model InterviewSession {
+  id           String        @id @default(uuid())
+  userId       String
+  type         InterviewType
+  difficulty   String
+  overallScore Int?
+  completed    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("interview_sessions")
+}
+
+model GrammarMistake {
+  id               String   @id @default(uuid())
+  userId           String
+  category         String
+  incorrectPattern String
+  correctPattern   String
+  explanation      String
+  occurrences      Int      @default(1)
+  mastered         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("grammar_mistakes")
+}
+
+model AIConversation {
+  id        String   @id @default(uuid())
+  userId    String
+  userText  String   @db.Text
+  coachText String   @db.Text
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_conversations")
+}
