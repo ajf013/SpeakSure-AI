@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SignIn, SignUp } from '@clerk/react';
-import { Mic, ArrowRight, Shield, Key, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Mic, ArrowRight, Key, UserPlus, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -13,9 +13,41 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
   const { showToast } = useToast();
   const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-  const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  const [isSignUp, setIsSignUp] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const authParam = params.get('auth') || params.get('mode');
+      return authParam === 'signup' || window.location.hash.includes('signup');
+    }
+    return false;
+  });
+
   const [localEmail, setLocalEmail] = useState<string>('');
   const [localName, setLocalName] = useState<string>('');
+
+  // Sync mode with URL query params
+  useEffect(() => {
+    const handleUrlSync = () => {
+      const params = new URLSearchParams(window.location.search);
+      const authParam = params.get('auth') || params.get('mode');
+      if (authParam === 'signup' || window.location.hash.includes('signup')) {
+        setIsSignUp(true);
+      } else if (authParam === 'signin' || window.location.hash.includes('signin')) {
+        setIsSignUp(false);
+      }
+    };
+
+    handleUrlSync();
+    window.addEventListener('popstate', handleUrlSync);
+    return () => window.removeEventListener('popstate', handleUrlSync);
+  }, []);
+
+  const toggleAuthMode = (signUpMode: boolean) => {
+    setIsSignUp(signUpMode);
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('auth', signUpMode ? 'signup' : 'signin');
+    window.history.pushState({}, '', newUrl.toString());
+  };
 
   const handleDevBypass = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,22 +65,52 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
           </div>
           <h2 className="text-2xl font-extrabold text-white">SpeakSure AI</h2>
           <p className="text-xs text-slate-400">
-            {publishableKey ? 'Authenticate with your Clerk Account' : 'Clerk Authentication Setup'}
+            {publishableKey
+              ? isSignUp
+                ? 'Create your SpeakSure AI Account'
+                : 'Sign in to your SpeakSure AI Account'
+              : 'Clerk Authentication Setup'}
           </p>
+
+          {/* Mode Switcher Buttons */}
+          {publishableKey && (
+            <div className="flex p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-semibold mt-3">
+              <button
+                type="button"
+                onClick={() => toggleAuthMode(false)}
+                className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  !isSignUp ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleAuthMode(true)}
+                className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  isSignUp ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Sign Up</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {publishableKey ? (
-          /* Real Clerk Login UI */
+          /* Real Clerk Login & Signup UI */
           <div className="flex justify-center">
             {isSignUp ? (
               <SignUp
                 fallbackRedirectUrl="/"
-                signInUrl="#"
+                signInUrl="?auth=signin"
                 appearance={{
                   elements: {
-                    card: 'bg-slate-900 border-none shadow-none text-white',
-                    headerTitle: 'text-white font-bold',
-                    headerSubtitle: 'text-slate-400',
+                    card: 'bg-slate-900 border-none shadow-none text-white w-full',
+                    headerTitle: 'text-white font-bold text-center',
+                    headerSubtitle: 'text-slate-400 text-center',
                     socialButtonsBlockButton: 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700',
                     formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
                     formFieldInput: 'bg-slate-950 border-slate-800 text-white',
@@ -59,12 +121,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
             ) : (
               <SignIn
                 fallbackRedirectUrl="/"
-                signUpUrl="#"
+                signUpUrl="?auth=signup"
                 appearance={{
                   elements: {
-                    card: 'bg-slate-900 border-none shadow-none text-white',
-                    headerTitle: 'text-white font-bold',
-                    headerSubtitle: 'text-slate-400',
+                    card: 'bg-slate-900 border-none shadow-none text-white w-full',
+                    headerTitle: 'text-white font-bold text-center',
+                    headerSubtitle: 'text-slate-400 text-center',
                     socialButtonsBlockButton: 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700',
                     formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
                     formFieldInput: 'bg-slate-950 border-slate-800 text-white',
@@ -75,7 +137,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
             )}
           </div>
         ) : (
-          /* Clerk Setup Instructions for Development */
+          /* Clerk Setup Instructions */
           <div className="space-y-4">
             <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 text-xs space-y-2">
               <div className="font-bold text-indigo-300 flex items-center gap-1.5">
@@ -84,12 +146,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
               </div>
               <ol className="list-decimal pl-4 space-y-1 text-slate-300">
                 <li>Go to <a href="https://dashboard.clerk.com/apps" target="_blank" rel="noreferrer" className="text-indigo-400 underline font-bold">dashboard.clerk.com/apps</a></li>
-                <li>Copy your <code className="bg-slate-950 px-1 py-0.5 rounded text-indigo-300 font-mono">Publishable Key</code> (starts with <span className="font-mono text-emerald-400">pk_test_...</span>).</li>
-                <li>Add it to your <code className="bg-slate-950 px-1 py-0.5 rounded text-indigo-300 font-mono">.env</code> file:</li>
+                <li>Copy your <code className="bg-slate-950 px-1 py-0.5 rounded text-indigo-300 font-mono">Publishable Key</code> (starts with <span className="font-mono text-emerald-400">pk_live_...</span> or <span className="font-mono text-emerald-400">pk_test_...</span>).</li>
+                <li>Add it to your Netlify Environment Variables as <code className="bg-slate-950 px-1 py-0.5 rounded text-indigo-300 font-mono">VITE_CLERK_PUBLISHABLE_KEY</code>.</li>
               </ol>
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-emerald-400 select-all overflow-x-auto">
-                VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-              </div>
             </div>
 
             <div className="relative flex py-1 items-center">
@@ -98,7 +157,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
               <div className="flex-grow border-t border-slate-800"></div>
             </div>
 
-            {/* Quick dev bypass form until key added */}
             <form onSubmit={handleDevBypass} className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-400 mb-1">Student Name:</label>
