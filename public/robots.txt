@@ -1,0 +1,7 @@
+# https://speaksure.closurepointsolutions.com/robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /?portal=admin
+
+Sitemap: https://speaksure.closurepointsolutions.com/sitemap.xml
