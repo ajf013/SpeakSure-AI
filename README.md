@@ -1,5 +1,7 @@
 # SpeakSure AI — "Speak English. Speak Confidently. Succeed."
 
+![CI/CD Pipeline](https://github.com/ajf013/SpeakSure-AI/actions/workflows/deploy.yml/badge.svg)
+
 **SpeakSure AI** is an enterprise-grade Progressive Web Application (PWA) designed for Indian college graduates preparing for campus placement drives, technical interviews, HR interviews, group discussions, and early corporate careers.
 
 It operates as an encouraging, non-judgmental **Personal AI Spoken English & Placement Coach** helping students practice daily, overcome interview hesitation, expand technical vocabulary, and achieve placement readiness.
