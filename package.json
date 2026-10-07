@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "test:unit": "vitest run",
     "server": "npx tsx server/index.ts",
     "preview": "vite preview"
   },

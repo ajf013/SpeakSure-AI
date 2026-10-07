@@ -202,5 +202,3 @@ AZURE_SPEECH_REGION=southindia
 ## 📬 Contact & Support
 
 - **Official Billing & Support Email**: `info@clousurepointsolutions.com`
-- **College Management Passcode**: `ADMIN2026`
-- **Official UPI VPA**: `9113811578@upi`
