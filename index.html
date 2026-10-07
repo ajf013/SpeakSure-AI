@@ -125,5 +125,26 @@
         });
       }
     </script>
+
+    <!-- Netlify Badge Purger Script -->
+    <script>
+      (function() {
+        const purgeNetlifyBadge = () => {
+          document.querySelectorAll('netlify-badge, .netlify-badge, [data-netlify-deploy-id], iframe[src*="netlify"]').forEach(el => el.remove());
+          document.querySelectorAll('div, button, a, span').forEach(el => {
+            if (el.children.length === 0 && el.textContent && el.textContent.includes('Powered by Netlify')) {
+              const badgeParent = el.closest('div[style*="fixed"]') || el.closest('div[style*="absolute"]') || el.parentElement || el;
+              badgeParent.remove();
+            }
+          });
+        };
+        const obs = new MutationObserver(purgeNetlifyBadge);
+        obs.observe(document.documentElement, { childList: true, subtree: true });
+        window.addEventListener('DOMContentLoaded', purgeNetlifyBadge);
+        window.addEventListener('load', purgeNetlifyBadge);
+        setTimeout(purgeNetlifyBadge, 1000);
+        setTimeout(purgeNetlifyBadge, 3000);
+      })();
+    </script>
   </body>
 </html>
