@@ -25,7 +25,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
   const [localEmail, setLocalEmail] = useState<string>('');
   const [localName, setLocalName] = useState<string>('');
 
-  // Sync mode with URL query params
+  // Sync mode with URL query params & popstate
   useEffect(() => {
     const handleUrlSync = () => {
       const params = new URLSearchParams(window.location.search);
@@ -47,6 +47,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('auth', signUpMode ? 'signup' : 'signin');
     window.history.pushState({}, '', newUrl.toString());
+  };
+
+  // Intercept click on Clerk footer links ("Don't have an account? Sign up")
+  const handleClerkContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const linkEl = target.closest('a') || target.closest('button') || target;
+    const href = linkEl.getAttribute('href') || '';
+    const text = (linkEl.textContent || '').toLowerCase();
+
+    if (href.includes('signup') || href.includes('sign-up') || text.includes('sign up')) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleAuthMode(true);
+    } else if (href.includes('signin') || href.includes('sign-in') || text.includes('sign in')) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleAuthMode(false);
+    }
   };
 
   const handleDevBypass = (e: React.FormEvent) => {
@@ -100,8 +118,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
         </div>
 
         {publishableKey ? (
-          /* Real Clerk Login & Signup UI */
-          <div className="flex justify-center">
+          /* Real Clerk Login & Signup UI with Intercepted Footer Links */
+          <div className="flex justify-center cursor-pointer" onClick={handleClerkContainerClick}>
             {isSignUp ? (
               <SignUp
                 fallbackRedirectUrl="/"
@@ -114,7 +132,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
                     socialButtonsBlockButton: 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700',
                     formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
                     formFieldInput: 'bg-slate-950 border-slate-800 text-white',
-                    footerActionLink: 'text-indigo-400 font-bold hover:underline',
+                    footerActionLink: 'text-indigo-400 font-bold hover:underline cursor-pointer',
                   },
                 }}
               />
@@ -130,7 +148,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
                     socialButtonsBlockButton: 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700',
                     formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
                     formFieldInput: 'bg-slate-950 border-slate-800 text-white',
-                    footerActionLink: 'text-indigo-400 font-bold hover:underline',
+                    footerActionLink: 'text-indigo-400 font-bold hover:underline cursor-pointer',
                   },
                 }}
               />
