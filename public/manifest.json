@@ -1,22 +1,23 @@
 {
   "short_name": "SpeakSure AI",
-  "name": "SpeakSure AI - Personal AI English Speaking Coach",
+  "name": "SpeakSure AI - Personal AI English Speaking & Placement Coach",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "/app-icon.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
-      "type": "image/png",
+      "src": "/icon-512.png",
+      "type": "image/jpeg",
       "sizes": "512x512"
     }
   ],
   "start_url": "/",
-  "background_color": "#0f172a",
-  "theme_color": "#4f46e5",
+  "background_color": "#090d16",
+  "theme_color": "#6366f1",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "description": "Speak English. Speak Confidently. Succeed. AI-powered English speaking and interview preparation coach for college students."
+  "description": "Speak English. Speak Confidently. Succeed. AI-powered English speaking and campus placement interview preparation coach for college students."
 }
