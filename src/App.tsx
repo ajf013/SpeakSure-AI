@@ -26,6 +26,7 @@ import { AdminPage } from './pages/AdminPage';
 import { LandingPage } from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
 import { OnboardingPage } from './pages/OnboardingPage';
+import { PwaInstallPrompt } from './components/navigation/PwaInstallPrompt';
 import { DAILY_ASSESSMENTS } from './data/mockData';
 import { DailyAssessment } from './types';
 
@@ -122,7 +123,7 @@ const MainApp: React.FC = () => {
   const isStudentTabLocked = isExpired && currentTab !== 'admin' && currentTab !== 'profile';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row overflow-x-hidden">
       {/* Desktop Sidebar Navigation */}
       <Navbar
         currentTab={currentTab}
@@ -133,6 +134,8 @@ const MainApp: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen pb-20 md:pb-6">
+        <PwaInstallPrompt deferredPrompt={deferredPrompt} onInstall={handleInstallPWA} />
+
         <Header
           onOpenProfile={() => setCurrentTab('profile')}
           deferredPrompt={deferredPrompt}
