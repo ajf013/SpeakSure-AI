@@ -28,34 +28,55 @@ class SpeechService {
     return !!(this.recognition || (typeof window !== 'undefined' && 'MediaRecorder' in window));
   }
 
+  private accumulatedTranscript: string = '';
+  private currentSessionFinal: string = '';
+
   public startListening(handlers: SpeechRecognitionHandlers) {
     if (this.isListening) return;
 
+    this.accumulatedTranscript = '';
+    this.currentSessionFinal = '';
+
     if (this.recognition) {
       this.isListening = true;
-      let finalTranscript = '';
 
       this.recognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        let sessionFinal = '';
+        let sessionInterim = '';
+
+        for (let i = 0; i < event.results.length; ++i) {
+          const phrase = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + ' ';
+            sessionFinal += phrase + ' ';
           } else {
-            interimTranscript += event.results[i][0].transcript;
+            sessionInterim += phrase;
           }
         }
-        const fullText = (finalTranscript + interimTranscript).trim();
+
+        this.currentSessionFinal = sessionFinal;
+        const fullText = (this.accumulatedTranscript + sessionFinal + sessionInterim).trim();
         handlers.onResult(fullText, false);
       };
 
       this.recognition.onerror = (event: any) => {
         console.warn('Speech recognition error:', event.error);
-        if (event.error !== 'no-speech') {
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
           handlers.onError(event.error);
         }
       };
 
       this.recognition.onend = () => {
+        if (this.isListening) {
+          // Web Speech API stops after silence pauses. Auto-restart if user hasn't stopped!
+          this.accumulatedTranscript = (this.accumulatedTranscript + ' ' + this.currentSessionFinal).trim();
+          this.currentSessionFinal = '';
+          try {
+            this.recognition.start();
+            return;
+          } catch (err) {
+            console.warn('Auto-restart recognition error:', err);
+          }
+        }
         this.isListening = false;
         handlers.onEnd();
       };
@@ -73,6 +94,8 @@ class SpeechService {
   public stopListening() {
     if (this.recognition && this.isListening) {
       this.isListening = false;
+      this.accumulatedTranscript = (this.accumulatedTranscript + ' ' + this.currentSessionFinal).trim();
+      this.currentSessionFinal = '';
       try {
         this.recognition.stop();
       } catch (err) {
@@ -81,26 +104,65 @@ class SpeechService {
     }
   }
 
-  public startAudioRecording(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        reject(new Error('Audio recording not supported'));
-        return;
-      }
+  private audioContext: AudioContext | null = null;
+  private noiseFilterNode: BiquadFilterNode | null = null;
 
-      this.audioChunks = [];
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then((stream) => {
-          this.mediaRecorder = new MediaRecorder(stream);
-          this.mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-              this.audioChunks.push(event.data);
-            }
-          };
-          this.mediaRecorder.start();
-          resolve();
-        })
-        .catch((err) => reject(err));
+  public async getNoiseCancelledStream(): Promise<MediaStream> {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Audio devices not supported');
+    }
+
+    // Apply WebRTC Noise Cancellation, Echo Cancellation, and Auto-Gain Control
+    const rawStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1,
+        sampleRate: 44100
+      }
+    });
+
+    try {
+      // Create Web Audio API High-Pass filter to strip low frequency fan noise / AC hum (< 90Hz)
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        this.audioContext = new AudioCtx();
+        const source = this.audioContext.createMediaStreamSource(rawStream);
+        
+        this.noiseFilterNode = this.audioContext.createBiquadFilter();
+        this.noiseFilterNode.type = 'highpass';
+        this.noiseFilterNode.frequency.setValueAtTime(90, this.audioContext.currentTime); // Filter out fan noise below 90Hz
+
+        const destination = this.audioContext.createMediaStreamDestination();
+        source.connect(this.noiseFilterNode);
+        this.noiseFilterNode.connect(destination);
+
+        return destination.stream;
+      }
+    } catch (err) {
+      console.warn('Web Audio Noise Filter fallback to raw stream:', err);
+    }
+
+    return rawStream;
+  }
+
+  public startAudioRecording(): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        this.audioChunks = [];
+        const stream = await this.getNoiseCancelledStream();
+        this.mediaRecorder = new MediaRecorder(stream);
+        this.mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            this.audioChunks.push(event.data);
+          }
+        };
+        this.mediaRecorder.start();
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 
@@ -113,8 +175,11 @@ class SpeechService {
 
       this.mediaRecorder.onstop = () => {
         const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-        // Stop all audio tracks
+        // Stop all audio tracks and close AudioContext
         this.mediaRecorder?.stream.getTracks().forEach((track) => track.stop());
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+          this.audioContext.close();
+        }
         resolve(audioBlob);
       };
 

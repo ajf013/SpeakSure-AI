@@ -175,6 +175,156 @@ export const DAILY_ASSESSMENTS: DailyAssessment[] = [
     difficulty: 'Advanced',
     suggestedDurationSeconds: 90,
     tips: ['Use phrases like: "In my opinion...", "While I understand that perspective, I believe..."']
+  },
+  {
+    id: 'day-16',
+    dayNumber: 16,
+    title: 'Project Failure & Recovery',
+    promptText: 'Describe a project or task where something went wrong, and how you recovered effectively.',
+    category: 'Behavioral Questions',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 75,
+    tips: ['Acknowledge the setback calmly, highlight proactive troubleshooting and team coordination.']
+  },
+  {
+    id: 'day-17',
+    dayNumber: 17,
+    title: 'Handling Work Pressure & Tight Deadlines',
+    promptText: 'Explain how you stay calm and organized when facing multiple exams or assignment deadlines.',
+    category: 'HR Interview',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 60,
+    tips: ['Mention prioritizing tasks, breaking big objectives into daily checklists, and staying focused.']
+  },
+  {
+    id: 'day-18',
+    dayNumber: 18,
+    title: 'Explain OOP Concepts to a Non-Technical Person',
+    promptText: 'Explain Object-Oriented Programming (Classes, Objects, Inheritance) using everyday real-world analogies.',
+    category: 'Technical Interview Communication',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 90,
+    tips: ['Use simple analogies like a blueprint vs a real car or recipe vs baked cake.']
+  },
+  {
+    id: 'day-19',
+    dayNumber: 19,
+    title: 'Handling Team Conflict in Group Projects',
+    promptText: 'Share how you resolved a disagreement among group project members to deliver on time.',
+    category: 'Behavioral Questions',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 75,
+    tips: ['Focus on active listening, finding common ground, and focusing on team goals.']
+  },
+  {
+    id: 'day-20',
+    dayNumber: 20,
+    title: 'What are your Salary Expectations?',
+    promptText: 'Respond professionally as a fresh graduate to salary expectations during placement rounds.',
+    category: 'HR Interview',
+    difficulty: 'Beginner',
+    suggestedDurationSeconds: 60,
+    tips: ['State that you follow company policy for entry-level roles while focusing on learning opportunity.']
+  },
+  {
+    id: 'day-21',
+    dayNumber: 21,
+    title: 'GD: Work From Home vs Office Work Culture',
+    promptText: 'Synthesize pros and cons of remote vs hybrid work culture in a campus GD environment.',
+    category: 'Group Discussion',
+    difficulty: 'Advanced',
+    suggestedDurationSeconds: 90,
+    tips: ['Balance flexibility and productivity against team bonding and hands-on mentorship.']
+  },
+  {
+    id: 'day-22',
+    dayNumber: 22,
+    title: 'An Innovative College Event or Hackathon Idea',
+    promptText: 'Pitch an innovative campus event or technology solution you would love to organize or build.',
+    category: 'Impromptu Speaking',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 60,
+    tips: ['Hook the listener with the core problem, pitch your solution, and state expected impact.']
+  },
+  {
+    id: 'day-23',
+    dayNumber: 23,
+    title: 'Explain REST APIs in Simple Terms',
+    promptText: 'Describe how client-server communication via REST APIs works using a restaurant waiter analogy.',
+    category: 'Technical Interview Communication',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 90,
+    tips: ['Analogy: Customer = Client, Menu = API endpoints, Waiter = Request/Response handler, Kitchen = Server.']
+  },
+  {
+    id: 'day-24',
+    dayNumber: 24,
+    title: 'What Makes You Stand Out From Other Candidates?',
+    promptText: 'Articulate your unique blend of technical curiosity, consistency, and positive attitude.',
+    category: 'HR Interview',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 75,
+    tips: ['Avoid generic buzzwords. Share a specific habit or dedication milestone.']
+  },
+  {
+    id: 'day-25',
+    dayNumber: 25,
+    title: 'Prioritizing Conflicting Tasks',
+    promptText: 'Explain your strategy when assigned urgent tasks simultaneously by different mentors or professors.',
+    category: 'Behavioral Questions',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 60,
+    tips: ['Mention assessing urgency vs importance, communicating proactively, and setting realistic expectations.']
+  },
+  {
+    id: 'day-26',
+    dayNumber: 26,
+    title: 'GD: Should Coding be Mandatory in School Curriculums?',
+    promptText: 'Participate in a GD discussing early digital literacy and coding education.',
+    category: 'Group Discussion',
+    difficulty: 'Advanced',
+    suggestedDurationSeconds: 90,
+    tips: ['Focus on computational thinking, problem solving, and logical reasoning skills.']
+  },
+  {
+    id: 'day-27',
+    dayNumber: 27,
+    title: 'Explain Database Indexing Simply',
+    promptText: 'Explain why database indexes make queries faster using a book index or library catalog comparison.',
+    category: 'Technical Interview Communication',
+    difficulty: 'Advanced',
+    suggestedDurationSeconds: 90,
+    tips: ['Explain looking through index at back of book vs scanning every single page from start.']
+  },
+  {
+    id: 'day-28',
+    dayNumber: 28,
+    title: 'Willingness to Relocate & Night Shifts',
+    promptText: 'Express your flexibility and commitment to corporate growth regarding location and shift schedules.',
+    category: 'HR Interview',
+    difficulty: 'Beginner',
+    suggestedDurationSeconds: 60,
+    tips: ['Be enthusiastic, adaptable, and express eager willingness to explore new cities.']
+  },
+  {
+    id: 'day-29',
+    dayNumber: 29,
+    title: 'Recent Tech Breakthrough Discussion',
+    promptText: 'Summarize a recent tech article or innovation you read about (e.g. quantum computing, LLMs, space tech).',
+    category: 'Impromptu Speaking',
+    difficulty: 'Intermediate',
+    suggestedDurationSeconds: 75,
+    tips: ['Summarize key innovation, why it matters to industry, and your personal takeaway.']
+  },
+  {
+    id: 'day-30',
+    dayNumber: 30,
+    title: 'Final Placement Board Mock Interview',
+    promptText: 'Comprehensive 3-minute capstone presentation introducing yourself, project highlights, and career mission.',
+    category: 'Self Introduction',
+    difficulty: 'Advanced',
+    suggestedDurationSeconds: 120,
+    tips: ['Combine greetings, self introduction, technical project mastery, strengths, and career vision seamlessly!']
   }
 ];
 

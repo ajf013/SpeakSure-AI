@@ -125,7 +125,7 @@ export const ProfilePage: React.FC = () => {
         </button>
       </form>
 
-      {/* Privacy & Data Controls */}
+      {/* Privacy & Account Controls */}
       <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <Shield className="w-5 h-5 text-indigo-400" />
@@ -145,17 +145,9 @@ export const ProfilePage: React.FC = () => {
             <LogOut className="w-4 h-4 text-indigo-400" />
             <span>Sign Out of Account</span>
           </button>
-
-          <button
-            type="button"
-            onClick={handleClearData}
-            className="px-5 py-2.5 rounded-xl bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 border border-rose-800/40 text-xs font-bold flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>Delete My Data & Reset History</span>
-          </button>
         </div>
       </div>
     </div>
   );
+
 };

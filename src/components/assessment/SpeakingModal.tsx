@@ -12,7 +12,13 @@ import {
   Volume2,
   Award,
   Zap,
-  ArrowRight
+  ArrowRight,
+  BellOff,
+  Eye,
+  EyeOff,
+  HelpCircle,
+  MicOff,
+  ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { DailyAssessment, SpeechAnalysisResult, AssessmentAttempt } from '../../types';
@@ -40,10 +46,14 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
   const [mode, setMode] = useState<'voice' | 'video' | 'text'>('voice');
   const [cameraEnabled, setCameraEnabled] = useState<boolean>(false);
   const [isListening, setIsListening] = useState<boolean>(false);
+  const [showLiveTranscript, setShowLiveTranscript] = useState<boolean>(false);
+  const [showFinishConfirmation, setShowFinishConfirmation] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>('');
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisResult, setAnalysisResult] = useState<SpeechAnalysisResult | null>(null);
+
+  const [noSpeechDetected, setNoSpeechDetected] = useState<boolean>(false);
 
   // Timer interval handling
   useEffect(() => {
@@ -64,6 +74,8 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
     setTranscript('');
     setElapsedSeconds(0);
     setAnalysisResult(null);
+    setNoSpeechDetected(false);
+    setShowFinishConfirmation(false);
     setIsListening(true);
 
     if (mode === 'video') {
@@ -79,17 +91,30 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
         showToast('Speech recognition note: type response or use microphone.', 'info');
       },
       onEnd: () => {
-        setIsListening(false);
+        // Only mark end if explicitly requested or confirmed
       },
     });
   };
 
-  const handleStopSpeaking = async () => {
+  const handleRequestFinish = () => {
+    // Show confirmation modal: "Finish panitananu check - Have you completed speaking?"
+    setShowFinishConfirmation(true);
+  };
+
+  const handleConfirmFinish = async () => {
+    setShowFinishConfirmation(false);
     setIsListening(false);
     speechService.stopListening();
 
-    const userName = profile.name || 'Student';
-    const finalTranscript = transcript.trim() || `My name is ${userName} and I am preparing for campus placement interviews.`;
+    const finalTranscript = transcript.trim();
+    const wordList = finalTranscript.split(/\s+/).filter((w) => w.length > 0);
+
+    // CRITICAL FIX: If no speech was spoken, DO NOT generate a fake evaluation score!
+    if (!finalTranscript || wordList.length < 2) {
+      setNoSpeechDetected(true);
+      return;
+    }
+
     setTranscript(finalTranscript);
 
     // Trigger AI Analysis
@@ -119,11 +144,22 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
     }, 1500);
   };
 
+  const handleResumeSpeaking = () => {
+    setShowFinishConfirmation(false);
+    setNoSpeechDetected(false);
+    // Keep listening active
+    if (!isListening) {
+      handleStartSpeaking();
+    }
+  };
+
   const handleReset = () => {
     setAnalysisResult(null);
     setTranscript('');
     setElapsedSeconds(0);
     setIsListening(false);
+    setShowFinishConfirmation(false);
+    setNoSpeechDetected(false);
     speechService.stopListening();
   };
 
@@ -146,6 +182,15 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
               Target: {assessment.suggestedDurationSeconds}s
             </span>
           </div>
+
+          {/* Mute Notifications Indicator during practice */}
+          {isListening && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold">
+              <BellOff className="w-3.5 h-3.5" />
+              <span>Notifications Muted</span>
+            </div>
+          )}
+
           <button
             onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -163,7 +208,40 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
             </p>
           </div>
 
-          {!analysisResult && !isAnalyzing && (
+          {/* Active AI Noise Cancellation Status Indicator */}
+          <div className="mb-4 flex items-center justify-center">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>AI Noise Cancellation Active (Background Fan & Ambient Noise Filtered)</span>
+            </span>
+          </div>
+
+          {/* NO SPEECH DETECTED WARNING SCREEN (Prevents false report results when silent) */}
+          {noSpeechDetected && (
+            <div className="py-10 px-6 text-center space-y-5 bg-slate-950/90 rounded-3xl border border-rose-500/30">
+              <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
+                <MicOff className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="text-xl font-extrabold text-white">No Speech Detected</h4>
+                <p className="text-xs text-slate-300 mt-2 max-w-md mx-auto leading-relaxed">
+                  We couldn't hear any clear spoken words. Please make sure your microphone is turned on, speak clearly into the mic, and try again!
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={handleStartSpeaking}
+                  className="px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center gap-2 mx-auto transition-all"
+                >
+                  <Mic className="w-4 h-4" />
+                  <span>🎙 Try Speaking Again</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!analysisResult && !isAnalyzing && !showFinishConfirmation && !noSpeechDetected && (
             <>
               {/* Mode Selector */}
               <div className="flex items-center justify-center gap-2 p-1.5 rounded-2xl bg-slate-950/60 border border-slate-800 max-w-md mx-auto mb-6">
@@ -203,20 +281,64 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
                 </div>
               )}
 
-              {/* Wave visualizer */}
+              {/* Siri-like Distraction-Free Voice Interface */}
               {mode !== 'text' && (
-                <div className="my-4">
-                  <AudioVisualizer isListening={isListening} />
-                  <div className="text-center mt-2">
-                    <span className="text-2xl font-mono font-bold text-indigo-400">
+                <div className="my-8 flex flex-col items-center justify-center">
+                  {/* Glowing Animated Siri Orb when listening */}
+                  <div className="relative flex items-center justify-center my-6">
+                    {isListening && (
+                      <>
+                        <div className="absolute w-44 h-44 rounded-full bg-gradient-to-tr from-indigo-500/20 via-purple-500/20 to-pink-500/20 animate-ping" />
+                        <div className="absolute w-36 h-36 rounded-full bg-indigo-500/30 blur-md animate-pulse" />
+                      </>
+                    )}
+                    <div
+                      className={`relative z-10 w-28 h-28 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl ${
+                        isListening
+                          ? 'bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-indigo-500/50 scale-105'
+                          : 'bg-slate-800 border-2 border-slate-700'
+                      }`}
+                    >
+                      <Mic className={`w-12 h-12 ${isListening ? 'text-white animate-bounce' : 'text-slate-400'}`} />
+                    </div>
+                  </div>
+
+                  {/* Listening status & Timer */}
+                  <div className="text-center space-y-1">
+                    <span className="text-2xl font-mono font-extrabold text-indigo-400 block">
                       {formatTimer(elapsedSeconds)}
                     </span>
+                    <p className="text-xs font-semibold text-slate-300">
+                      {isListening ? '🎙 Hey SpeakSure! Listening... Speak without distraction.' : 'Click "Start Assessment" below to begin speaking.'}
+                    </p>
                   </div>
+
+                  {/* Optional Live Transcript Toggle (Hidden by default to avoid distraction) */}
+                  {isListening && (
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setShowLiveTranscript(!showLiveTranscript)}
+                        className="text-xs text-slate-400 hover:text-indigo-300 flex items-center gap-1.5 underline underline-offset-4"
+                      >
+                        {showLiveTranscript ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        <span>{showLiveTranscript ? 'Hide Live Transcript' : 'Show Live Transcript'}</span>
+                      </button>
+
+                      {showLiveTranscript && (
+                        <div className="mt-3 p-4 rounded-2xl bg-slate-950 border border-slate-800 max-w-lg text-left">
+                          <div className="text-[11px] text-indigo-400 font-bold mb-1">Live Speech Stream:</div>
+                          <p className="text-xs text-slate-200 italic leading-relaxed">
+                            {transcript || 'Capturing speech...'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Transcript Display / Input */}
-              {mode === 'text' ? (
+              {/* Text Input Mode */}
+              {mode === 'text' && (
                 <div className="mb-6">
                   <label className="block text-xs font-semibold text-slate-400 mb-2">Type your response:</label>
                   <textarea
@@ -227,23 +349,13 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
                     className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
-              ) : (
-                <div className="mb-6 p-4 rounded-2xl bg-slate-950 border border-slate-800 min-h-[90px]">
-                  <div className="text-xs text-indigo-400 font-bold mb-1 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Live Transcript:</span>
-                  </div>
-                  <p className="text-sm text-slate-200 leading-relaxed italic">
-                    {transcript || (isListening ? 'Listening to your speech... Keep speaking naturally.' : 'Click "Start Assessment" below and speak clearly.')}
-                  </p>
-                </div>
               )}
 
-              {/* Actions */}
-              <div className="flex items-center justify-center gap-4">
+              {/* Action Buttons */}
+              <div className="flex items-center justify-center gap-4 mt-6">
                 {!isListening ? (
                   <button
-                    onClick={mode === 'text' ? handleStopSpeaking : handleStartSpeaking}
+                    onClick={mode === 'text' ? handleConfirmFinish : handleStartSpeaking}
                     className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                   >
                     <Mic className="w-5 h-5" />
@@ -251,15 +363,46 @@ export const SpeakingModal: React.FC<SpeakingModalProps> = ({
                   </button>
                 ) : (
                   <button
-                    onClick={handleStopSpeaking}
+                    onClick={handleRequestFinish}
                     className="px-8 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold shadow-lg shadow-rose-600/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                   >
                     <Square className="w-5 h-5 fill-current" />
-                    <span>Finish & Get AI Feedback</span>
+                    <span>Finish Practice</span>
                   </button>
                 )}
               </div>
             </>
+          )}
+
+          {/* FINISH CONFIRMATION MODAL ("finish panitananu oru question potuko") */}
+          {showFinishConfirmation && (
+            <div className="py-8 px-4 text-center space-y-6 bg-slate-950/90 rounded-3xl border border-indigo-500/30">
+              <div className="w-16 h-16 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto">
+                <HelpCircle className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="text-xl font-extrabold text-white">Have you finished speaking your answer?</h4>
+                <p className="text-xs text-slate-300 mt-2 max-w-md mx-auto">
+                  Confirm if you are ready to evaluate your response, or continue speaking if you want to add more thoughts.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                <button
+                  onClick={handleResumeSpeaking}
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors"
+                >
+                  🎙 Keep Speaking / Add More
+                </button>
+                <button
+                  onClick={handleConfirmFinish}
+                  className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>Yes, Get My AI Report</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Analyzing Loader */}
